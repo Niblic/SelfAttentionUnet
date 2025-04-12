@@ -24,6 +24,54 @@ NUM_FILTER = 32
 FILTER_SIZE = 3
 UP_SAMP_SIZE = 2
 
+def squeeze_and_excitation_block(input_X, reduction_ratio=16):
+    """
+    SE-Block: Betont relevante Feature Maps durch globales Kontextverständnis
+    :param input_X: Eingabetensor (Feature-Map)
+    :param reduction_ratio: Reduktion der Kanalanzahl für den Squeeze-Schritt
+    """
+    channels = input_X.shape[-1]  # Anzahl der Kanäle
+    squeeze = tf.reduce_mean(input_X, axis=[1, 2], keepdims=True)
+    
+    excitation = layers.Dense(units=channels // reduction_ratio, activation='relu')(squeeze)
+    excitation = layers.Dense(units=channels, activation='sigmoid')(excitation)
+    
+    return input_X * excitation
+
+def conv_block(x, filters):
+    """
+    Standard Convolution Block: 2x Convolution + BatchNorm + ReLU
+    """
+    x = layers.Conv2D(filters, (FILTER_SIZE, FILTER_SIZE), padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation('relu')(x)
+    
+    x = layers.Conv2D(filters, (FILTER_SIZE, FILTER_SIZE), padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation('relu')(x)
+    
+    return x
+
+def upsample_block(x, filters):
+    """
+    Upsampling Block: UpSampling2D + Convolution zur Kanalanpassung
+    """
+    x = layers.UpSampling2D((UP_SAMP_SIZE, UP_SAMP_SIZE))(x)
+    x = layers.Conv2D(filters, (UP_SAMP_SIZE, UP_SAMP_SIZE), padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation('relu')(x)
+    
+    return x
+
+def gating_signal(input_tensor, out_size):
+    """
+    Gating Signal: 1x1 Convolution zum Anpassen der Kanäle
+    """
+    gating = layers.Conv2D(out_size, kernel_size=(1, 1), padding="same")(input_tensor)
+    gating = layers.BatchNormalization()(gating)
+    gating = layers.Activation('relu')(gating)
+    return gating
+
 
 class SelfAttentionBlock(layers.Layer):
     def __init__(self, **kwargs):
