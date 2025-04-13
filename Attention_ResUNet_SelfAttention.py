@@ -178,12 +178,14 @@ def Attention_ResUNet_SelfAttention(input_shape=( 512 , 512 , 9  )):
     c9 = conv_block(layers.concatenate([sa9, c3]), NUM_FILTER * 4)
 
     u10 = upsample_block(c9, NUM_FILTER * 2)
-    sa10 = SelfAttentionBlock()(u10)
-    c10 = conv_block(layers.concatenate([sa10, c2]), NUM_FILTER * 2)
+    # sa10 = SelfAttentionBlock()(u10) # OOM Issue removed 
+    # c10 = conv_block(layers.concatenate([sa10, c2]), NUM_FILTER * 2)
+    c10 = conv_block(layers.concatenate([u10, c2]), NUM_FILTER * 2)
 
     u11 = upsample_block(c10, NUM_FILTER)
-    sa11 = SelfAttentionBlock()(u11)
-    c11 = conv_block(layers.concatenate([sa11, c1]), NUM_FILTER)
+    # sa11 = SelfAttentionBlock()(u11)   # OOM Issue removed 
+    # c11 = conv_block(layers.concatenate([sa11, c1]), NUM_FILTER)
+    c11 = conv_block(layers.concatenate([u11, c1]), NUM_FILTER)
     # Ausgabeschicht
     conv_final = layers.Conv2D(1, (1, 1), activation="sigmoid")(c11)
 
