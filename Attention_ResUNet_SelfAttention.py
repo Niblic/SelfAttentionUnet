@@ -15,7 +15,7 @@ import tensorflow.keras.backend as K
 
 tf.keras.backend.set_image_data_format('channels_last')
 # input data
-INPUT_SIZE = 128
+INPUT_SIZE = 256
 INPUT_CHANNEL = 3 # 1-grayscale, 3-RGB scale
 OUTPUT_MASK_CHANNEL = 1
 
